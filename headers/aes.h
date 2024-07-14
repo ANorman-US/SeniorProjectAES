@@ -23,12 +23,14 @@ class AES{
         };
         void subBytes(unsigned char*);//bit substitution
         void shiftRows(unsigned char*);
+        unsigned char galoisMult(unsigned char, int);
         void mixColumns(unsigned char*);
+        void addKey(unsigned char*, const unsigned char*);
 
     public:
             AES(){};
             ~AES(){};
-            void encrypt(unsigned char*, const unsigned char*, const unsigned char*);//text, plainText, key
+            void encrypt(unsigned char*, const unsigned char*);//text, key
 };
 
 #endif

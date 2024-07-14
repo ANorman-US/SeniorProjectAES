@@ -9,13 +9,22 @@ using namespace std;
 int main()
 {
     AES aes;
-    unsigned char plainText[16] = {'h','e','l','l','o',' ','w','o','r','l','d',' ','t','e','s','t'};
+
+    unsigned char plainText[16] = {0x19, 0xA0, 0x9A, 0xE9,
+                                   0x3D, 0xF4, 0xC6, 0xF8,
+                                   0xE3, 0xE2, 0x8D, 0x48,
+                                   0xBE, 0x2B, 0x2A, 0x08};
+    
+    unsigned char key[16] = {0xA0, 0x88, 0x23, 0x2A,
+                             0xFA, 0x54, 0xA3, 0x6C,
+                             0xFE, 0x2C, 0x39, 0x76,
+                             0x17, 0xB1, 0x39, 0x05};                                    
     unsigned char state[16];
-    unsigned char key[16] = {'t','e','s','t','i','n','g',' ','t','h','i','s',' ','k','e','y'};
     memcpy(state, plainText, 16);
-    aes.encrypt(state, plainText, key);
+
+    aes.encrypt(state, key);
     for(int i=0;i<16;i++)
-        cout << state[i];
+        cout << int(state[i]) << endl;
     
 
     return 0;

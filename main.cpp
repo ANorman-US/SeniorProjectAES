@@ -6,6 +6,8 @@
 
 using namespace std;
 
+void encodeText(unsigned char*, const unsigned char*);
+
 int main()
 {
     AES aes;
@@ -22,10 +24,18 @@ int main()
     unsigned char state[16];
     memcpy(state, plainText, 16);
 
+
+
     aes.encrypt(state, key);
-    for(int i=0;i<16;i++)
-        cout << int(state[i]) << endl;
+    encodeText(state, plainText);
+
     
 
     return 0;
+}
+
+void encodeText(unsigned char* state, const unsigned char* plainText)
+{
+    for(int i=0;i<16;i++)
+        state[i] ^= plainText[i];
 }

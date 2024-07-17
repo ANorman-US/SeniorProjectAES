@@ -1,5 +1,6 @@
 #ifndef AES_H
 #define AES_H
+#include <array>
 
 class AES{
     private:
@@ -21,16 +22,16 @@ class AES{
         0xE1, 0xF8, 0x98, 0x11, 0x69, 0xD9, 0x8E, 0x94, 0x9B, 0x1E, 0x87, 0xE9, 0xCE, 0x55, 0x28, 0xDF,
         0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16
         };
-        void subBytes(unsigned char*);//bit substitution
-        void shiftRows(unsigned char*);
+        void subBytes(std::array<unsigned char, 16>&);//bit substitution
+        void shiftRows(std::array<unsigned char, 16>&);
         unsigned char galoisMult(unsigned char, int);
-        void mixColumns(unsigned char*);
-        void addKey(unsigned char*, const unsigned char*);
+        void mixColumns(std::array<unsigned char, 16>&);
+        void addKey(std::array<unsigned char, 16>&, const std::array<unsigned char, 16>&);
 
     public:
-            AES(){};
-            ~AES(){};
-            void encrypt(unsigned char*, const unsigned char*);//text, key
+        AES(){};
+        ~AES(){};
+        void encrypt(std::array<unsigned char, 16>&, const std::array<unsigned char, 16>&);//text, key
 };
 
 #endif

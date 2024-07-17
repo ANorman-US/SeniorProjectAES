@@ -1,13 +1,12 @@
 #include "../headers./aes.h"
-#include <string>//for memcpy
 
-void AES::subBytes(unsigned char* state)
+void AES::subBytes(std::array<unsigned char, 16> &state)
 {
     for(int i=0;i<16;i++)
         state[i]=sTable[state[i]];
 }
 
-void AES::shiftRows(unsigned char* state)
+void AES::shiftRows(std::array<unsigned char, 16> &state)
 {
     unsigned char temp;
     //second row shift left once
@@ -44,14 +43,14 @@ unsigned char AES::galoisMult(unsigned char byte, int num)
     return result;
 }
 
-void AES::mixColumns(unsigned char* state)
+void AES::mixColumns(std::array<unsigned char, 16> &state)
 {
     /*Galois field
     02 03 01 01
     01 02 03 01
     01 01 02 03
     03 01 01 02*/
-    unsigned char temp[16];
+    std::array<unsigned char, 16> temp;
     for(int i=0;i<4;i++)
     {
         temp[i] = galoisMult(state[i], 2) ^ galoisMult(state[i+4], 3) ^ state[i+8] ^ state[i+12];
@@ -59,16 +58,16 @@ void AES::mixColumns(unsigned char* state)
         temp[i+8] = state[i] ^ state[i+4] ^ galoisMult(state[i+8], 2) ^ galoisMult(state[i+12], 3);
         temp[i+12] = galoisMult(state[i], 3) ^ state[i+4] ^ state[i+8] ^ galoisMult(state[i+12], 2);
     }
-    memcpy(state, temp, 16);
+    state=temp;
 }
 
-void AES::addKey(unsigned char* state, const unsigned char* key)
+void AES::addKey(std::array<unsigned char, 16> &state, const std::array<unsigned char, 16> &key)
 {
     for(int i=0;i<16;i++)
         state[i]^=key[i];
 }
 
-void AES::encrypt(unsigned char* state, const unsigned char *key)
+void AES::encrypt(std::array<unsigned char, 16> &state, const std::array<unsigned char, 16> &key)
 {
     subBytes(state);
     shiftRows(state);

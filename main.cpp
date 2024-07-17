@@ -25,10 +25,8 @@ int main()
     array<unsigned char, 16> state;
     state = plainText;
 
-
-
     aes.encrypt(state, key);
-    //encodeText(state, plainText);
+    encodeText(state, plainText);
 
     Huffman huffman;
 
@@ -37,7 +35,7 @@ int main()
     return 0;
 }
 
-void encodeText(unsigned char* state, const unsigned char* plainText)
+void encodeText(array<unsigned char, 16> &state, const array<unsigned char, 16> &plainText)
 {
     for(int i=0;i<16;i++)
         state[i] ^= plainText[i];

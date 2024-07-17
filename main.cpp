@@ -4,36 +4,16 @@
 #include "./headers/huffman.h"
 #include <iostream>
 #include <array>
-#include <unordered_set>
+#include <set>
 #include <chrono>
 
 using namespace std;
-
-//hash function for array for usage in unordered_set
-//Code adapted from https://stackoverflow.com/questions/8026890/c-how-to-insert-array-into-hash-set
-namespace std {
-    template<typename T, size_t N>
-    struct hash<array<T, N>> {
-        typedef array<T, N> argument_type;
-        typedef size_t result_type;
-
-        result_type operator()(const argument_type& a) const {
-            hash<T> hasher;
-            result_type h = 0;
-            for (result_type i = 0; i < N; i++) {
-                h = h * 31 + hasher(a[i]);
-            }
-            return h;
-        }
-    };
-}
-
 
 const int NUM_PLAINTEXTS = 100'000;
 const int NUM_KEYS = 1'000'000;
 
 void encodeText(array<unsigned char, 16>&, const array<unsigned char, 16>&);//plainText XOR cipherText 
-void genRandom16(unordered_set<array<unsigned char, 16>>&, int);//set, size. Generates random 16byte unsigned char arrays and adds to set
+void genRandom16(set<array<unsigned char, 16>>&, int);//set, size. Generates random 16byte unsigned char arrays and adds to set
 
 int main()
 {
@@ -56,26 +36,27 @@ int main()
     AES aes;
     Huffman huffman;
     
-    //auto start = chrono::high_resolution_clock::now();
-    /*auto end = chrono::high_resolution_clock::now();
-    chrono::duration<double> duration = end - start;
-    cout << endl << duration.count();*/
+    auto start = chrono::high_resolution_clock::now();
 
-    unordered_set<array<unsigned char, 16>> setPlainTexts;
-    unordered_set<array<unsigned char, 16>> setKeys;
+    set<array<unsigned char, 16>> setPlainTexts;
+    set<array<unsigned char, 16>> setKeys;
     genRandom16(setPlainTexts, NUM_PLAINTEXTS);
     genRandom16(setKeys, NUM_KEYS);
 
-     return 0;
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    cout << endl << duration.count();
+
+    return 0;
 }
 
 void encodeText(array<unsigned char, 16> &state, const array<unsigned char, 16> &plainText)
 {
-    for(int i=0;i<16;i++)
+    for(int i=0;i<16;i++) 
         state[i] ^= plainText[i];
 }
 
-void genRandom16(unordered_set<array<unsigned char, 16>> &charSet, int size)
+void genRandom16(set<array<unsigned char, 16>> &charSet, int size)
 {
     array<unsigned char, 16> temp;
     while(charSet.size() < size)

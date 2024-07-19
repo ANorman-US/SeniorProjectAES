@@ -1,5 +1,5 @@
 //Alexander Norman
-//AES Codebreaking with Huffman Coding
+//AES Crpytanalysis
 #include "./headers/aes.h"
 #include "./headers/huffman.h"
 #include <iostream>
@@ -33,17 +33,36 @@ int main()
     AES aes;
     aes.encrypt(state, key);
 
-    encodeText(state, plainText);
+    //encodeText(state, plainText);
 
     //Huffman test
-    Huffman huffman(plainText);
+    Huffman huffman(state);
     
+    for(const auto &pair : huffman.getHuffmanCodes())
+    {
+        cout << (int)pair.first << ": ";
+        for(int i=0;i<pair.second.size();i++)
+        {
+            cout << pair.second[i];
+        }
+        cout << endl;
+    }
+
     auto start = chrono::high_resolution_clock::now();
 
     set<array<unsigned char, 16>> setPlainTexts;
     set<array<unsigned char, 16>> setKeys;
-    genRandom16(setPlainTexts, NUM_PLAINTEXTS);
-    genRandom16(setKeys, NUM_KEYS);
+    genRandom16(setPlainTexts, 1000);
+    genRandom16(setKeys, 1000);
+
+    for (const auto &pT : setPlainTexts)
+    {
+        for(const auto &k : setKeys)
+        {
+            state = pT;
+            aes.encrypt(state, k);
+        }
+    }
 
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;

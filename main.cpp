@@ -18,7 +18,7 @@ void genRandom16(set<array<unsigned char, 16>>&, int);//set, size. Generates ran
 int main()
 {
     //Testing Purposes
-    /*array<unsigned char, 16> plainText = {0x19, 0xA0, 0x9A, 0xE9,
+    array<unsigned char, 16> plainText = {0x19, 0xA0, 0x9A, 0xE9,
                                           0x3D, 0xF4, 0xC6, 0xF8,
                                           0xE3, 0xE2, 0x8D, 0x48,
                                           0xBE, 0x2B, 0x2A, 0x08};    
@@ -29,12 +29,14 @@ int main()
     array<unsigned char, 16> state;
     state = plainText;
 
+    //test AES class
     AES aes;
     aes.encrypt(state, key);
-    encodeText(state, plainText);*/
 
-    AES aes;
-    Huffman huffman;
+    encodeText(state, plainText);
+
+    //Huffman test
+    Huffman huffman(plainText);
     
     auto start = chrono::high_resolution_clock::now();
 

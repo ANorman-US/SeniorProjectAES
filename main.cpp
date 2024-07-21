@@ -17,6 +17,36 @@ void genRandom16(set<array<unsigned char, 16>>&, int);//set, size. Generates ran
 
 int main()
 {
+    //update later for better distribution
+    set<array<unsigned char, 16>> setPlainTexts;
+    set<array<unsigned char, 16>> setKeys;
+    genRandom16(setPlainTexts, 100);
+    genRandom16(setKeys, 100);
+    //update later to generate variant keys
+    AES aes;
+    array<unsigned char, 16> state;
+
+    auto start = chrono::high_resolution_clock::now();
+
+    for (const auto &plainText : setPlainTexts)
+    {
+        for(const auto &key : setKeys)
+        {
+            state = plainText;
+            aes.encrypt(state, key);
+            Huffman huffman(state);
+            //perform markov chain analysis on huffman.getHuffmanCodes();
+            //variants here later on
+        }
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+    chrono::duration<double> duration = end - start;
+    cout << endl << duration.count();
+
+
+
+    /*
     //Testing Purposes
     array<unsigned char, 16> plainText = {0x19, 0xA0, 0x9A, 0xE9,
                                           0x3D, 0xF4, 0xC6, 0xF8,
@@ -67,6 +97,8 @@ int main()
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;
     cout << endl << duration.count();
+
+    */
 
     return 0;
 }

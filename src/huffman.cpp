@@ -9,12 +9,12 @@ Huffman::Huffman(const std::array<unsigned char, 16> &array)
 
 Huffman::~Huffman()
 {
-
+    delete root;
 }
 
 void Huffman::generateTree(const std::array<unsigned char, 16> &array)
 {
-    std::map<unsigned char, int> frequency;
+    std::array<unsigned char, 16> frequency;
     for(int i=0;i<16;i++)//map with 0s
         frequency[i] = 0;
     
@@ -28,9 +28,9 @@ void Huffman::generateTree(const std::array<unsigned char, 16> &array)
     }
 
     std::priority_queue<HuffmanNode*, std::vector<HuffmanNode*>, CompareHuffmanNode> pq;//minheap
-    for(auto it : frequency)//push to prioQ
+    for(int i=0;i<16;i++)
     {
-        HuffmanNode* h = new HuffmanNode(it.first, it.second);
+        HuffmanNode* h = new HuffmanNode(i, frequency[i]);
         pq.push(h);
     }
 
@@ -39,7 +39,7 @@ void Huffman::generateTree(const std::array<unsigned char, 16> &array)
         HuffmanNode* left = pq.top(); pq.pop();
         HuffmanNode* right = pq.top(); pq.pop();
 
-        HuffmanNode *pair = new HuffmanNode('\0' , left->freq+right->freq);
+        HuffmanNode *pair = new HuffmanNode(-1 , left->freq+right->freq);//non-leaf node
         pair->left=left;
         pair->right=right;
         pq.push(pair);
@@ -48,21 +48,33 @@ void Huffman::generateTree(const std::array<unsigned char, 16> &array)
     pq.pop();
 }
 
-void Huffman::generateCodes(HuffmanNode *node, std::vector<bool> code)
+void Huffman::generateCodes(HuffmanNode *node, std::vector<bool> &code)
 {
     if(!node)
         return;
     
-    if(node->right == nullptr && node->left == nullptr)
+    if(node->c != -1)//-1 indicates non-leaf node
         codes[node->c] = code;
     
-    std::vector<bool> leftC= code; leftC.push_back(0);
-    std::vector<bool> rightC= code; rightC.push_back(1);
-    generateCodes(node->left, leftC);
-    generateCodes(node->right, rightC);
+    code.push_back(0);
+    generateCodes(node->left, code);
+    code.pop_back();
+
+    code.push_back(1);
+    generateCodes(node->right, code);
+    code.pop_back();
 }
 
-std::map<unsigned char, std::vector<bool>> Huffman::getHuffmanCodes()
+void Huffman::deleteTree(HuffmanNode *node)
+{
+    if(!node)
+        return;
+    deleteTree(node->left);
+    deleteTree(node->right);
+    delete node;
+}
+
+std::array<std::vector<bool>, 16> Huffman::getHuffmanCodes()
 {
     return codes;
 }

@@ -2,6 +2,7 @@
 //AES Crpytanalysis
 #include "./headers/aes.h"
 #include "./headers/huffman.h"
+#include "./headers/markov.h"
 #include <iostream>
 #include <array>
 #include <set>
@@ -117,13 +118,16 @@ int main()
 
     set<array<unsigned char, 16>> setPlainTexts;
     set<array<unsigned char, 16>> setKeys;
-    genRandomSegmented(setPlainTexts, 100, 10);
+    genRandomSegmented(setPlainTexts, 100, 10);//come back later to check for bugs.
     genRandomSegmented(setKeys, 1000, 10);
 
 
     //update later to generate variant keys
     AES aes;
     array<unsigned char, 16> state;
+
+    array<array<double, 2>, 2> tMatrixControl;
+    array<array<double, 2>, 2> tMatrixVariant;
 
     auto start = chrono::high_resolution_clock::now();
 
@@ -134,6 +138,9 @@ int main()
             state = plainText;
             aes.encrypt(state, key);
             Huffman huffman(state);
+            Markov::generateMarkovTransitionMatrix(huffman.getHuffmanCodes(), tMatrixControl);
+            
+
             //perform markov chain analysis on huffman.getHuffmanCodes();
             //variants here later on
         }

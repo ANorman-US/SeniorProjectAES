@@ -1,8 +1,8 @@
 //Alexander Norman
 //AES Crpytanalysis
 //Notes
-//53s without threading, 100 plaintexts, 1000 keys
-//10 seconds for 6 threads, 96 plaintexts, 996 keys
+//16-17s without threading, 100 plaintexts, 1000 keys
+//need to fix threading
 #include "./headers/aes.h"
 #include "./headers/huffman.h"
 #include "./headers/markov.h"
@@ -21,9 +21,8 @@ using namespace std;
 //const int NUM_KEYS = 1'000'000;
 const int NUM_PLAINTEXTS = 100;
 const int NUM_KEYS = 1000;
-
 const int NUM_SEGMENTS = 10;
-const int NUM_THREADS = 6;
+const int NUM_THREADS = 10;
 const __uint128_t UINT128_MAX = ~__uint128_t{};
 
 void encodeText(array<unsigned char, 16>&, const array<unsigned char, 16>&);//plainText XOR cipherText 
@@ -32,7 +31,7 @@ void toCharArray(array<unsigned char, 16>&, const __uint128_t &);//128 bit numbe
 void swapBits(array<unsigned char, 16>&, const int &);//randomly swap n numbers of bits
 void markovDifference(const array<array<double, 2>, 2>&, const array<array<double, 2>, 2>&, double &);//measure difference between 2 transition matrices
 
-void threadMain(array<double, 8> &differenceTotal, int &countTotal, mutex &m)
+void threadMain(array<double, 8> &differenceTotal, int &countTotal, mutex &m)//fix later.
 {
     set<array<unsigned char, 16>> setPlainTexts;
     set<array<unsigned char, 16>> setKeys;
@@ -81,7 +80,7 @@ void threadMain(array<double, 8> &differenceTotal, int &countTotal, mutex &m)
 
 int main()
 {
-
+    /*
     auto start = chrono::high_resolution_clock::now();
 
     mutex m;
@@ -100,9 +99,9 @@ int main()
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;
     cout << endl << duration.count();
-    
+    */
 
-   /*
+   
     set<array<unsigned char, 16>> setPlainTexts;
     set<array<unsigned char, 16>> setKeys;
     genRandomSegmented(setPlainTexts, 100, 10);//come back later to check for bugs.
@@ -157,7 +156,7 @@ int main()
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;
     cout << endl << duration.count();
-    */
+    
 
     return 0;
 }

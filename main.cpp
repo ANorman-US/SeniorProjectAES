@@ -1,5 +1,8 @@
 //Alexander Norman
 //AES Crpytanalysis
+//Notes
+//53s without threading, 100 plaintexts, 1000 keys
+//10 seconds for 6 threads, 96 plaintexts, 996 keys
 #include "./headers/aes.h"
 #include "./headers/huffman.h"
 #include "./headers/markov.h"
@@ -7,127 +10,112 @@
 #include <array>
 #include <set>
 #include <random>
+#include <cmath>
 #include <chrono>
 #include <thread>
-
+#include <mutex>
 
 using namespace std;
 
-const int NUM_PLAINTEXTS = 100'000;
-const int NUM_KEYS = 1'000'000;
+//const int NUM_PLAINTEXTS = 100'000;
+//const int NUM_KEYS = 1'000'000;
+const int NUM_PLAINTEXTS = 100;
+const int NUM_KEYS = 1000;
+
 const int NUM_SEGMENTS = 10;
+const int NUM_THREADS = 6;
 const __uint128_t UINT128_MAX = ~__uint128_t{};
 
 void encodeText(array<unsigned char, 16>&, const array<unsigned char, 16>&);//plainText XOR cipherText 
 void genRandomSegmented(set<array<unsigned char, 16>>&, int, int);//set, size, numsegments.
 void toCharArray(array<unsigned char, 16>&, const __uint128_t &);//128 bit number to char array
+void swapBits(array<unsigned char, 16>&, const int &);//randomly swap n numbers of bits
+void markovDifference(const array<array<double, 2>, 2>&, const array<array<double, 2>, 2>&, double &);//measure difference between 2 transition matrices
+
+void threadMain(array<double, 8> &differenceTotal, int &countTotal, mutex &m)
+{
+    set<array<unsigned char, 16>> setPlainTexts;
+    set<array<unsigned char, 16>> setKeys;
+    genRandomSegmented(setPlainTexts, NUM_PLAINTEXTS / NUM_THREADS, 10);
+    genRandomSegmented(setKeys, NUM_KEYS / NUM_THREADS, 10);
+
+    AES aes;
+    array<unsigned char, 16> state;
+    array<array<double, 2>, 2> tMatrixControl;
+    array<array<double, 2>, 2> tMatrixVariant;
+
+    for (const auto &plainText : setPlainTexts)
+    {
+        for(const auto &key : setKeys)
+        {
+            state = plainText;
+            aes.encrypt(state, key);
+            Huffman huffman(state);
+            Markov::generateMarkovTransitionMatrix(huffman.getHuffmanCodes(), tMatrixControl);
+            
+            //variant keys
+            array<unsigned char, 16> stateVariant;
+            array<unsigned char, 16> keyVariant;
+            for(int i=0;i<8;i++)
+            {
+                stateVariant=plainText;
+                keyVariant = key;
+
+                swapBits(keyVariant, pow(2,i));
+                aes.encrypt(stateVariant, keyVariant);
+                Huffman huffmanVariant(stateVariant);
+
+                Markov::generateMarkovTransitionMatrix(huffmanVariant.getHuffmanCodes(), tMatrixVariant);
+                double difference;
+                markovDifference(tMatrixControl, tMatrixVariant, difference);
+                m.lock();
+                differenceTotal[i] += difference;
+                m.unlock();
+            }
+            m.lock();
+            countTotal++;
+            m.unlock();
+        }
+    }
+}
 
 int main()
 {
-    /*
-    //testing threading
-    auto f = [] ()
-    {
-        set<array<unsigned char, 16>> setPlainTexts;
-        set<array<unsigned char, 16>> setKeys;
-        genRandom16(setPlainTexts, 35);
-        genRandom16(setKeys, 35);
-        AES aes;
-        array<unsigned char, 16> state;
-        for (const auto &plainText : setPlainTexts)
-        {
-            for(const auto &key : setKeys)
-            {
-                state = plainText;
-                aes.encrypt(state, key);
-                Huffman huffman(state);
-            }
-        }
-    };
 
     auto start = chrono::high_resolution_clock::now();
-    
+
+    mutex m;
+    array<double, 8> differenceTotal{};
+    int countTotal = 0;
+
     vector<thread> threads;
-    int numThreads = 8;
-    for (int i = 0; i < numThreads; i++) {
-        threads.emplace_back(f);
-    }
-    for (auto &th : threads)
+    for(int i=0;i<NUM_THREADS;i++)
+        threads.emplace_back(threadMain, ref(differenceTotal), ref(countTotal), ref(m));//threads receive value instead of reference by default
+    for(auto &th : threads)
         th.join();
-
-    auto end = chrono::high_resolution_clock::now();
-    chrono::duration<double> duration = end - start;
-    cout << endl << duration.count();
-    */
-
-    /*
-    //Testing Purposes
-    array<unsigned char, 16> plainText = {0x19, 0xA0, 0x9A, 0xE9,
-                                          0x3D, 0xF4, 0xC6, 0xF8,
-                                          0xE3, 0xE2, 0x8D, 0x48,
-                                          0xBE, 0x2B, 0x2A, 0x08};    
-    array<unsigned char, 16> key = {0xA0, 0x88, 0x23, 0x2A,
-                                    0xFA, 0x54, 0xA3, 0x6C,
-                                    0xFE, 0x2C, 0x39, 0x76,
-                                    0x17, 0xB1, 0x39, 0x05};                                    
-    array<unsigned char, 16> state;
-    state = plainText;
-
-    //test AES class
-    AES aes;
-    aes.encrypt(state, key);
-
-    //encodeText(state, plainText);
-
-    //Huffman test
-    Huffman huffman(state);
     
-    for(const auto &pair : huffman.getHuffmanCodes())
-    {
-        cout << (int)pair.first << ": ";
-        for(int i=0;i<pair.second.size();i++)
-        {
-            cout << pair.second[i];
-        }
-        cout << endl;
-    }
-
-    auto start = chrono::high_resolution_clock::now();
-
-    set<array<unsigned char, 16>> setPlainTexts;
-    set<array<unsigned char, 16>> setKeys;
-    genRandom16(setPlainTexts, 1000);
-    genRandom16(setKeys, 1000);
-
-    for (const auto &pT : setPlainTexts)
-    {
-        for(const auto &k : setKeys)
-        {
-            state = pT;
-            aes.encrypt(state, k);
-        }
-    }
-
+    for(int i=0;i<8;i++)
+        cout << differenceTotal[i] / countTotal << endl;
+    cout << countTotal << endl;
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;
     cout << endl << duration.count();
-    */
+    
 
-
-
-
+   /*
     set<array<unsigned char, 16>> setPlainTexts;
     set<array<unsigned char, 16>> setKeys;
     genRandomSegmented(setPlainTexts, 100, 10);//come back later to check for bugs.
     genRandomSegmented(setKeys, 1000, 10);
 
-
-    //update later to generate variant keys
     AES aes;
     array<unsigned char, 16> state;
-
     array<array<double, 2>, 2> tMatrixControl;
     array<array<double, 2>, 2> tMatrixVariant;
+
+    array<double, 8> differenceTotal{};
+    array<double, 8> differenceAverage;
+    int countTotal = NUM_KEYS * NUM_PLAINTEXTS;
 
     auto start = chrono::high_resolution_clock::now();
 
@@ -140,19 +128,36 @@ int main()
             Huffman huffman(state);
             Markov::generateMarkovTransitionMatrix(huffman.getHuffmanCodes(), tMatrixControl);
             
+            //variant keys
+            array<unsigned char, 16> stateVariant;
+            array<unsigned char, 16> keyVariant;
+            for(int i=0;i<8;i++)
+            {
+                stateVariant=plainText;
+                keyVariant = key;
 
-            //perform markov chain analysis on huffman.getHuffmanCodes();
-            //variants here later on
+                swapBits(keyVariant, pow(2,i));
+                aes.encrypt(stateVariant, keyVariant);
+                Huffman huffmanVariant(stateVariant);
+
+                Markov::generateMarkovTransitionMatrix(huffmanVariant.getHuffmanCodes(), tMatrixVariant);
+                double difference;
+                markovDifference(tMatrixControl, tMatrixVariant, difference);
+                differenceTotal[i] += difference;
+            }
         }
+    }
+    
+    for(int i=0;i<8;i++)
+    {
+        differenceAverage[i] = differenceTotal[i] / countTotal;
+        cout << differenceAverage[i] << endl;
     }
 
     auto end = chrono::high_resolution_clock::now();
     chrono::duration<double> duration = end - start;
     cout << endl << duration.count();
-    
-
-
-    
+    */
 
     return 0;
 }
@@ -163,10 +168,43 @@ void encodeText(array<unsigned char, 16> &state, const array<unsigned char, 16> 
         state[i] ^= plainText[i];
 }
 
+void markovDifference(const array<array<double, 2>, 2>&mControl, const array<array<double, 2>, 2>&mVariant, double &difference)
+{
+    double total = 0;
+    for(int i=0;i<2;i++)
+    {
+        for(int j=0;j<2;j++)
+        {
+            double d = mControl[i][j] - mVariant[i][j];
+            total += (d*d);
+        }
+    }
+    difference = sqrt(total);
+}
+
+void swapBits(array<unsigned char, 16>&key, const int &num)
+{
+    //set<int> indices;//makes sure no duplicates of flipping
+    for(int i=0;i<num;i++)
+    {
+        int index = rand() % 128;
+        /*while(indices.count(index))
+            index = rand() % 128;
+        indices.insert(index);
+        */
+
+        int byteIndex = index / 8;
+        int bitIndex = index % 8;
+
+        unsigned char c = 1 << bitIndex;//creates a byte with a 1 at the index
+        key[byteIndex] ^= c;//XOR only affects targeted index
+    }
+}
+
 void genRandomSegmented(set<array<unsigned char, 16>> &charSet, int size, int segments)
 {
-    random_device rd;
-    mt19937_64 gen(rd());
+    random_device seed;//seed for random number generator
+    mt19937_64 gen(seed());//random number generator
     std::uniform_int_distribution<uint64_t> dis64(0, ~uint64_t(0));//setting up uniform distribution for 64 bit number generation
 
     

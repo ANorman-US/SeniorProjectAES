@@ -80,14 +80,16 @@ const __uint128_t UINT128_MAX = ~__uint128_t{};
 const int variantBitLength = 14;
 const array<int, variantBitLength> variantBits = {1,2,4,8,16,32,64,96,112,120,124,126,127,128};
 
+mutex m;
+
 void encodeText(array<unsigned char, 16>&, const array<unsigned char, 16>&);//plainText XOR cipherText 
 void genRandomSegmented(set<array<unsigned char, 16>>&, int, int);//set, size, numsegments.
-void genRandomSegmented2(set<array<unsigned char, 16>>&, int, int, set<array<unsigned char, 16>>&, mutex &m);//set, size, numsegments, another set. to prevent duplicates between threads
+void genRandomSegmented2(set<array<unsigned char, 16>>&, int, int, set<array<unsigned char, 16>>&);//set, size, numsegments, another set. to prevent duplicates between threads
 void toCharArray(array<unsigned char, 16>&, const __uint128_t &);//128 bit number to char array
 void swapBits(array<unsigned char, 16>&, const int &);//randomly swap n numbers of bits
 void markovDifference(const array<array<double, 2>, 2>&, const array<array<double, 2>, 2>&, double &);//measure difference between 2 transition matrices
 
-void threadMain(array<double, variantBitLength> &differenceTotal, int &countTotal, const set<array<unsigned char, 16>>&setPlainTexts, set<array<unsigned char, 16>>&setTotalKeys, mutex &m)//fix later.
+void threadMain(array<double, variantBitLength> &differenceTotal, int &countTotal, const set<array<unsigned char, 16>>&setPlainTexts, set<array<unsigned char, 16>>&setTotalKeys)//fix later.
 {
     //set<array<unsigned char, 16>> setPlainTexts;
     set<array<unsigned char, 16>> setKeys;
@@ -105,7 +107,8 @@ void threadMain(array<double, variantBitLength> &differenceTotal, int &countTota
         for(const auto &key : setKeys)
         {
             state = plainText;
-            aes.encrypt(state, key);
+            aes.encrypt(state, key);//ciphertext now
+            encodeText(state, plainText);
             Huffman huffman(state);
             Markov::generateMarkovTransitionMatrix(huffman.getHuffmanCodes(), tMatrixControl);
             
@@ -118,7 +121,8 @@ void threadMain(array<double, variantBitLength> &differenceTotal, int &countTota
                 keyVariant = key;
 
                 swapBits(keyVariant, variantBits[i]);
-                aes.encrypt(stateVariant, keyVariant);
+                aes.encrypt(stateVariant, keyVariant);//ciphertext now
+                encodeText(stateVariant, plainText);
                 Huffman huffmanVariant(stateVariant);
 
                 Markov::generateMarkovTransitionMatrix(huffmanVariant.getHuffmanCodes(), tMatrixVariant);
@@ -150,7 +154,7 @@ int main()
 
     vector<thread> threads; 
     for(int i=0;i<NUM_THREADS;i++)//create threads
-        threads.emplace_back(threadMain, ref(differenceTotal), ref(countTotal), ref(setPlainTexts), ref(setTotalKeys), ref(m));//threads receive value instead of reference by default
+        threads.emplace_back(threadMain, ref(differenceTotal), ref(countTotal), ref(setPlainTexts), ref(setTotalKeys));//threads receive value instead of reference by default
     for(auto &th : threads)//wait for threads to finish
         th.join();
     for(int i=0;i<variantBitLength;i++)//calculate average difference of matrices
@@ -188,6 +192,7 @@ int main()
         {
             state = plainText;
             aes.encrypt(state, key);
+            encodeText(state, plainText);
             Huffman huffman(state);
             Markov::generateMarkovTransitionMatrix(huffman.getHuffmanCodes(), tMatrixControl);
             
@@ -201,6 +206,7 @@ int main()
 
                 swapBits(keyVariant, pow(2,i));
                 aes.encrypt(stateVariant, keyVariant);
+                encodeText(stateVariant, plainText);
                 Huffman huffmanVariant(stateVariant);
 
                 Markov::generateMarkovTransitionMatrix(huffmanVariant.getHuffmanCodes(), tMatrixVariant);
@@ -304,7 +310,7 @@ void genRandomSegmented(set<array<unsigned char, 16>> &charSet, int size, int se
     }
 }
 
-void genRandomSegmented2(set<array<unsigned char, 16>> &charSet, int size, int segments, set<array<unsigned char, 16>> &totalSet, mutex &m)//for use with keys only in threads
+void genRandomSegmented2(set<array<unsigned char, 16>> &charSet, int size, int segments, set<array<unsigned char, 16>> &totalSet)//for use with keys only in threads
 {
     random_device seed;//seed for random number generator
     mt19937_64 gen(seed());//random number generator

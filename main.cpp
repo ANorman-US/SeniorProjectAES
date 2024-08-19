@@ -71,7 +71,7 @@ using namespace std;
 //const int NUM_PLAINTEXTS = 100'000;
 //const int NUM_KEYS = 1'000'000;
 const int NUM_PLAINTEXTS = 1'00;
-const int NUM_KEYS = 100'0;
+const int NUM_KEYS = 10'0;
 const int NUM_SEGMENTS = 10;
 const int NUM_THREADS = 10;
 const __uint128_t UINT128_MAX = ~__uint128_t{};
@@ -80,7 +80,7 @@ const __uint128_t UINT128_MAX = ~__uint128_t{};
 const int variantBitLength = 14;
 const array<int, variantBitLength> variantBits = {1,2,4,8,16,32,64,96,112,120,124,126,127,128};
 
-mutex m;
+mutex m, m1, m2;
 
 void encodeText(array<unsigned char, 16>&, const array<unsigned char, 16>&);//plainText XOR cipherText 
 void genRandomSegmented(set<array<unsigned char, 16>>&, int, int);//set, size, numsegments.
@@ -132,9 +132,9 @@ void threadMain(array<double, variantBitLength> &differenceTotal, int &countTota
                 differenceTotal[i] += difference;
                 m.unlock();
             }
-            m.lock(); 
+            m1.lock(); 
             countTotal++;
-            m.unlock();
+            m1.unlock();
         }
     }
 }
@@ -327,9 +327,9 @@ void genRandomSegmented2(set<array<unsigned char, 16>> &charSet, int size, int s
         num = (num % segmentSize) + (index * segmentSize);//ensures it falls in the range
     
         toCharArray(temp, num);//convert 128 bit number to the array
-        m.lock();
+        m2.lock();
         bool added = totalSet.insert(temp).second;//prevents advancing to the next segment in case of duplicate in total set
-        m.unlock();
+        m2.unlock();
         if(added)
         {
             charSet.insert(temp);//add to local set

@@ -70,8 +70,8 @@ using namespace std;
 
 //const int NUM_PLAINTEXTS = 100'000;
 //const int NUM_KEYS = 1'000'000;
-const int NUM_PLAINTEXTS = 1'000;
-const int NUM_KEYS = 100'000;
+const int NUM_PLAINTEXTS = 1'00;
+const int NUM_KEYS = 100'0;
 const int NUM_SEGMENTS = 10;
 const int NUM_THREADS = 10;
 const __uint128_t UINT128_MAX = ~__uint128_t{};
@@ -95,7 +95,7 @@ void threadMain(array<double, variantBitLength> &differenceTotal, int &countTota
     set<array<unsigned char, 16>> setKeys;
     //genRandomSegmented(setPlainTexts, NUM_PLAINTEXTS / NUM_THREADS, 10);
     //genRandomSegmented(setKeys, NUM_KEYS / NUM_THREADS, 10);
-    genRandomSegmented2(setKeys, NUM_KEYS / NUM_THREADS, NUM_SEGMENTS, setTotalKeys, m);
+    genRandomSegmented2(setKeys, NUM_KEYS / NUM_THREADS, NUM_SEGMENTS, setTotalKeys);
 
     AES aes;
     array<unsigned char, 16> state;

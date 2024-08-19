@@ -1,4 +1,4 @@
-#include "../headers./markov.h"
+#include "../headers/markov.h"
 
 void Markov::generateMarkovTransitionMatrix(const std::array<std::vector<bool>, 16>& codewords, std::array<std::array<double, 2>, 2>& tMatrix) 
 {

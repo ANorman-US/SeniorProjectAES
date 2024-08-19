@@ -1,4 +1,4 @@
-#include "../headers./huffman.h"
+#include "../headers/huffman.h"
 
 Huffman::Huffman(const std::array<unsigned char, 16> &array)
 {

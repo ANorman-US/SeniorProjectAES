@@ -72,7 +72,7 @@ using namespace std;
 //const int NUM_PLAINTEXTS = 100'000;
 //const int NUM_KEYS = 1'000'000;
 const int NUM_PLAINTEXTS = 1'00;
-const int NUM_KEYS = 10'0;
+const int NUM_KEYS = 100'0;
 const int NUM_SEGMENTS = 10;
 const int NUM_THREADS = 10;
 const __uint128_t UINT128_MAX = ~__uint128_t{};
@@ -145,7 +145,7 @@ int main()
 {
     
     auto start = chrono::high_resolution_clock::now();
-
+    
     set<array<unsigned char, 16>> setPlainTexts;
     Crypto::genRandomSegmented(setPlainTexts, NUM_PLAINTEXTS, NUM_SEGMENTS);//generate plaintexts
     set<array<unsigned char, 16>> setTotalKeys;//create set to prevent duplication of keys between threads
@@ -170,6 +170,60 @@ int main()
     for(int i=0;i<variantBitLength;i++)
         cout << differenceAverage[i] << endl;//1 bit difference, 2 bit, 4, etc
     
+    /*
+    auto start = chrono::high_resolution_clock::now();
+
+    set<array<unsigned char, 16>> setPlainTexts;
+    set<array<unsigned char, 16>> setKeys;
+    Crypto::genRandomSegmented(setPlainTexts, NUM_PLAINTEXTS, 10);//come back later to check for bugs.
+    Crypto::genRandomSegmented(setKeys, NUM_KEYS, 10);
+
+    AES aes;
+    array<unsigned char, 16> state;
+
+    array<double, variantBitLength> differenceTotal{};
+    array<double, variantBitLength> differenceAverage;
+    int countTotal = NUM_KEYS * NUM_PLAINTEXTS;
+
+    for (const auto &plainText : setPlainTexts)
+    {
+        for(const auto &key : setKeys)
+        {
+            state = plainText;
+            aes.encrypt(state, key);
+            Crypto::encodeText(state, plainText);
+            
+            //variant keys
+            array<unsigned char, 16> stateVariant;
+            array<unsigned char, 16> keyVariant;
+            for(int i=0;i<variantBitLength;i++)
+            {
+                stateVariant=plainText;
+                keyVariant = key;
+
+                Crypto::swapBits(keyVariant, variantBits[i]);
+                aes.encrypt(stateVariant, keyVariant);
+                Crypto::encodeText(stateVariant, plainText);
+                
+                //differenceTotal[i]+=Crypto::hammingDistanceBits(state, stateVariant);
+                differenceTotal[i]+=Crypto::hammingDistanceBytes(state, stateVariant);
+            }
+        }
+    }
+    
+    for(int i=0;i<variantBitLength;i++)
+    {
+        differenceAverage[i] = differenceTotal[i] / countTotal;
+        cout << differenceAverage[i] << endl;
+    }
+
+    auto end = chrono::high_resolution_clock::now();
+
+    chrono::duration<double> duration = end - start;
+    cout << endl << duration.count() << endl;
+    */
+
+
 
    /*Not updated, move from 8 to variantBitLength
     set<array<unsigned char, 16>> setPlainTexts;

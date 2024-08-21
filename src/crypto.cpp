@@ -120,3 +120,32 @@ void Crypto::toCharArray(std::array<unsigned char, 16>&arr, const __uint128_t &n
         temp >>= 8;//bitwise shift right 8 bits
     }
 }
+
+int Crypto::hammingDistanceBytes(const std::array<unsigned char, 16>&textOne, const std::array<unsigned char, 16>&textTwo)
+{
+    int distance = 0;
+    for(int i=0;i<16;i++)
+    {
+        if(textOne[i] != textTwo[i])
+            distance++;
+    }
+    return distance;
+}
+
+int Crypto::hammingDistanceBits(const std::array<unsigned char, 16>&textOne, const std::array<unsigned char, 16>&textTwo)
+{
+    int distance = 0;
+    for(int i=0;i<16;i++)
+    {
+        unsigned char b1 = textOne[i];
+        unsigned char b2 = textTwo[i];
+        for(int j=7; j>=0;j--)
+        {
+            unsigned char c1 = (b1 >> j) & 1;
+            unsigned char c2 = (b2 >> j) & 1;
+            if(c1 != c2)
+                distance++;
+        }
+    }
+    return distance;
+}
